@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -21,7 +22,8 @@ public class Question {
 
     private String text;
     private String type;
-    @OneToMany
+
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Option> options;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,6 +31,10 @@ public class Question {
 
     @JoinColumn(name = "form_id")
     private Form form;
+
+    public Question() {
+
+    }
 
     public Question(Form form) {
         this.form = form;
@@ -71,6 +77,14 @@ public class Question {
 
     public void setForm(Form form) {
         this.form = form;
+    }
+
+    public List<Option> getOptions() {
+        return options;
+    }
+
+    public void setOptions(List<Option> options) {
+        this.options = options;
     }
 
 }

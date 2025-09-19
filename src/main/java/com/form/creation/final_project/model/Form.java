@@ -11,6 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
@@ -27,6 +29,10 @@ public class Form {
     @JoinColumn(name = "user_id")
     @JsonIgnore
     private User createdBy;
+
+    @ManyToMany
+    @JoinTable(name = "form_permitted_users", joinColumns = @JoinColumn(name = "form_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    private List<User> permittedUsers;
 
     @OneToMany(mappedBy = "form", cascade = CascadeType.ALL)
     private List<Question> questions;
@@ -80,6 +86,14 @@ public class Form {
 
     public void setQuestions(List<Question> questions) {
         this.questions = questions;
+    }
+
+    public List<User> getPermittedUsers() {
+        return permittedUsers;
+    }
+
+    public void setPermittedUsers(List<User> permittedUsers) {
+        this.permittedUsers = permittedUsers;
     }
 
 }

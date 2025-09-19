@@ -20,7 +20,7 @@ public class Response {
     private Long responseId;
 
     @ManyToOne
-    @JsonIgnore
+    // @JsonIgnore
     @JoinColumn(name = "form_id")
     private Form form;
 
@@ -30,6 +30,9 @@ public class Response {
     @ManyToOne
     @JsonIgnore
     private User user;
+
+    public Response() {
+    }
 
     public Response(Long responseId, Form form, List<ResponseEntry> responseEntries) {
         this.responseId = responseId;
@@ -59,6 +62,14 @@ public class Response {
 
     public void setResponseEntries(List<ResponseEntry> responseEntries) {
         this.responseEntries = responseEntries;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
 }

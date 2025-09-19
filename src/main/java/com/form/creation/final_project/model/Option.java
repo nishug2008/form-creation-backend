@@ -9,12 +9,14 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "my_option")
 public class Option {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int option_id;
 
     @Column(nullable = false)
     private String value;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnore
     @JoinColumn(name = "question_id", nullable = false)

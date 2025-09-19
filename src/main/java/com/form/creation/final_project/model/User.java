@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 
 @Entity
@@ -23,9 +24,25 @@ public class User {
     private String password;
     private String role;
 
+    @ManyToMany(mappedBy = "permittedUsers")
+    @JsonIgnore
+    private List<Form> accessibleForm;
+
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
+    private List<Form> forms;
+
     @OneToMany(fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Response> response;
+
+    public List<Form> getAccessibleForm() {
+        List<Form> forming = accessibleForm;
+        return accessibleForm;
+    }
+
+    public void setAccessibleForm(List<Form> accessibleForm) {
+        this.accessibleForm = accessibleForm;
+    }
 
     public User(String email, String password) {
         this.email = email;
@@ -45,9 +62,6 @@ public class User {
         this.password = password;
         this.role = role;
     }
-
-    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL)
-    private List<Form> forms;
 
     public User(Long id, String name, String email, String password, List<Form> forms) {
         this.id = id;

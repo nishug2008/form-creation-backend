@@ -1,10 +1,25 @@
 package com.form.creation.final_project.controller;
 
+import com.form.creation.final_project.dto.FormDTO;
 import com.form.creation.final_project.model.*;
 import com.form.creation.final_project.repository.*;
+import com.form.creation.final_project.service.ResponseService;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/forms")
@@ -16,19 +31,59 @@ public class FormController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private ResponseRepository responseRepository;
+
+    @Autowired
+    ResponseService responseService;
+
     @PostMapping("/create/{userId}")
-    public String createForm(@PathVariable Long userId, @RequestBody Form form) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null)
+    public String createForm(@PathVariable Long userId,
+            @RequestBody FormDTO formDTO) {
+
+        User creator = userRepository.findById(userId).orElse(null);
+
+        if (creator == null)
             return "User not found!";
-        form.setCreatedBy(user);
-        formRepository.save(form);
+
+        Form form = new Form();
+        form.setTitle(formDTO.getFormTitle());
+        form.setDescription(formDTO.getFormDescription());
+        form.setCreatedBy(creator);
+        Form savedForm = formRepository.save(form);
+        System.out
+                .println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+        if (formDTO.getPermittedUserIds() != null && !formDTO.getPermittedUserIds().isEmpty()) {
+            List<User> permittedUsers = userRepository.findAllById(formDTO.getPermittedUserIds());
+            savedForm.setPermittedUsers(permittedUsers);
+        }
+
+        if (formDTO.getQuestions() != null) {
+
+            for (Question question : formDTO.getQuestions()) {
+
+                question.setForm(savedForm);
+                if (question.getOptions() != null) {
+
+                    question.getOptions().forEach(opt -> opt.setQuestion(question));
+
+                }
+            }
+            savedForm.setQuestions(formDTO.getQuestions());
+        }
+        formRepository.save(savedForm);
+
         return "Form created successfully!";
+
     }
 
-    @GetMapping("/all")
-    public List<Form> getAllForms() {
-        return formRepository.findAll();
+    @GetMapping("/all/{userId}")
+    public List<Form> getAllForms(@PathVariable Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return user.getAccessibleForm();
     }
 
     @GetMapping("/user/{userId}")
@@ -42,6 +97,68 @@ public class FormController {
         return formRepository.findById(formId).orElse(null);
     }
 
+    // ------------------------ GET RESPONSES AS JSON ------------------------
+    @GetMapping("/{formId}/responses")
+    public ResponseEntity<List<Map<String, Object>>> getResponseAsJson(@PathVariable Long formId) {
+        Form form = formRepository.findById(formId)
+                .orElseThrow(() -> new RuntimeException("Form Not Found"));
+
+        List<Response> responses = responseService.getResponsesByForm(form);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (Response r : responses) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("userId", r.getUser().getId());
+            for (ResponseEntry entry : r.getResponseEntries()) {
+                row.put(entry.getQuestion().getText(), entry.getAnswertext());
+            }
+            result.add(row);
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    // ------------------------ DOWNLOAD RESPONSES AS CSV ------------------------
+    @GetMapping("/{formId}/responses/csv")
+    public void downloadResponsesCsv(@PathVariable Long formId, HttpServletResponse response) throws IOException {
+        Form form = formRepository.findById(formId).orElseThrow(() -> new RuntimeException("Form Not Found"));
+        List<Response> responses = responseService.getResponsesByForm(form);
+
+        // Collect all unique questions
+        Set<String> allQuestions = new LinkedHashSet<>();
+        for (Response r : responses) {
+            for (ResponseEntry entry : r.getResponseEntries()) {
+                allQuestions.add(entry.getQuestion().getText());
+            }
+        }
+        response.setContentType("text/csv");
+        response.setHeader("Content-Disposition", "attachment; filename=\"form_" + formId + "_responses.csv\"");
+        PrintWriter writer = response.getWriter();
+
+        // CSV header
+        writer.print("UserId");
+        for (String q : allQuestions) {
+            writer.print("," + q);
+        }
+        writer.println();
+        for (Response r : responses) {
+            Map<String, String> answersMap = new HashMap<>();
+
+            for (ResponseEntry entry : r.getResponseEntries()) {
+                answersMap.put(entry.getQuestion().getText(), entry.getAnswertext());
+            }
+
+            writer.print(r.getUser().getId());
+            for (String q : allQuestions) {
+                writer.print("," + answersMap.getOrDefault(q, ""));
+            }
+            writer.println();
+
+        }
+        writer.flush();
+        writer.close();
+    }
+
     @DeleteMapping("/delete/{formId}")
     public String deleteForm(@PathVariable Long formId) {
         if (!formRepository.existsById(formId))
@@ -49,4 +166,5 @@ public class FormController {
         formRepository.deleteById(formId);
         return "Form deleted successfully!";
     }
+
 }

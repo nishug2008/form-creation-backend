@@ -23,6 +23,9 @@ public class ResponseEntry {
     @JsonIgnore
     private Response response;
 
+    public ResponseEntry() {
+    }
+
     public ResponseEntry(Long id, String answertext, Question question) {
         this.id = id;
         this.answertext = answertext;
@@ -51,6 +54,14 @@ public class ResponseEntry {
 
     public void setQuestion(Question question) {
         this.question = question;
+    }
+
+    public Response getResponse() {
+        return response;
+    }
+
+    public void setResponse(Response response) {
+        this.response = response;
     }
 
 }

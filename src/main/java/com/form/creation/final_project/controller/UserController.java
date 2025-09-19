@@ -6,6 +6,7 @@ import com.form.creation.final_project.model.User;
 import com.form.creation.final_project.repository.UserRepository;
 import com.form.creation.final_project.service.UserServices;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,9 @@ public class UserController {
         String password = (String) credentials.get("password");
 
         User myUser = userServices.checkCredentials(email, password);
+        System.out.println(myUser);
         if (myUser != null) {
+
             return ResponseEntity.ok(myUser);
         } else {
             return ResponseEntity.status(401).body("Invalid Credential");
@@ -59,6 +62,11 @@ public class UserController {
     @GetMapping("/{id}")
     public User getUser(@PathVariable Long id) {
         return userRepository.findById(id).orElse(null);
+    }
+
+    @GetMapping("/all")
+    public List<User> getAllUser() {
+        return userRepository.findAll();
     }
 
 }
