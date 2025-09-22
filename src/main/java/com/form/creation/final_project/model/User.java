@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -19,11 +20,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-    private String email;
-    private String password;
-    private String role;
-
+    private String firstName;
+    private String lastName;
     @ManyToMany(mappedBy = "permittedUsers")
     @JsonIgnore
     private List<Form> accessibleForm;
@@ -34,6 +32,36 @@ public class User {
     @OneToMany(fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Response> response;
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    private String password;
+
+    private String role;
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public List<Response> getResponse() {
+        return response;
+    }
+
+    public void setResponse(List<Response> response) {
+        this.response = response;
+    }
 
     public List<Form> getAccessibleForm() {
         List<Form> forming = accessibleForm;
@@ -56,19 +84,21 @@ public class User {
         this.response = response;
     }
 
-    public User(String name, String email, String password, String role) {
-        this.name = name;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-    }
-
-    public User(Long id, String name, String email, String password, List<Form> forms) {
+    public User(Long id, String firstName, String lastName, String email, String password, List<Form> forms) {
         this.id = id;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.forms = forms;
         this.password = password;
+    }
+
+    public User(String firstName, String lastName, String email, String password, String role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+        this.role = role;
     }
 
     public Long getId() {
@@ -93,14 +123,6 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public String getEmail() {

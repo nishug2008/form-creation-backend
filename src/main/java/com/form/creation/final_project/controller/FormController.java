@@ -118,7 +118,7 @@ public class FormController {
         return ResponseEntity.ok(result);
     }
 
-    // ------------------------ DOWNLOAD RESPONSES AS CSV ------------------------
+    // ------------------------ DOWNLOAD RESPONSES AS CSV--------------------------
     @GetMapping("/{formId}/responses/csv")
     public void downloadResponsesCsv(@PathVariable Long formId, HttpServletResponse response) throws IOException {
         Form form = formRepository.findById(formId).orElseThrow(() -> new RuntimeException("Form Not Found"));
@@ -131,6 +131,7 @@ public class FormController {
                 allQuestions.add(entry.getQuestion().getText());
             }
         }
+
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "attachment; filename=\"form_" + formId + "_responses.csv\"");
         PrintWriter writer = response.getWriter();
@@ -140,6 +141,7 @@ public class FormController {
         for (String q : allQuestions) {
             writer.print("," + q);
         }
+
         writer.println();
         for (Response r : responses) {
             Map<String, String> answersMap = new HashMap<>();

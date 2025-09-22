@@ -2,15 +2,22 @@ package com.form.creation.final_project.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 
+import com.form.creation.final_project.dto.LoginResponse;
+import com.form.creation.final_project.jwt.JwtUtils;
 import com.form.creation.final_project.model.User;
 import com.form.creation.final_project.repository.UserRepository;
-import com.form.creation.final_project.service.UserServices;
+import com.form.creation.final_project.security.CustomUserDetails;
 
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,38 +31,64 @@ public class UserController {
     private UserRepository userRepository;
 
     @Autowired
-    private UserServices userServices;
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtils jwtUtils;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, Object> userDetails) {
 
         String email = (String) userDetails.get("email");
-        String password = (String) userDetails.get("password");
-        String name = (String) userDetails.get("name");
+        String rawPassword = (String) userDetails.get("password");
+        String firstName = (String) userDetails.get("firstName");
+        String lastName = (String) userDetails.get("lastName");
         String role = (String) userDetails.get("role");
-        User user = new User(name, email, password, role);
+
+        String encodedPassword = passwordEncoder.encode(rawPassword);
+
+        User user = new User(firstName, lastName, email, encodedPassword, role);
 
         try {
             userRepository.save(user);
             return ResponseEntity.ok("User Created Successfully");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("User Can not be created at this moment");
+            return ResponseEntity.internalServerError().body("User cannot be created at this moment");
         }
 
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> postMethodName(@RequestBody Map<String, Object> credentials) {
-        String email = (String) credentials.get("email");
-        String password = (String) credentials.get("password");
+    public ResponseEntity<?> login(@RequestBody Map<String, Object> loginRequest) {
+        String email = (String) loginRequest.get("email");
+        String password = (String) loginRequest.get("password");
 
-        User myUser = userServices.checkCredentials(email, password);
-        System.out.println(myUser);
-        if (myUser != null) {
+        try {
+            // Authenticate using AuthenticationManager
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password));
 
-            return ResponseEntity.ok(myUser);
-        } else {
-            return ResponseEntity.status(401).body("Invalid Credential");
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // Get user details from CustomUserDetails
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+            // Generate JWT
+            String jwt = jwtUtils.generateTokenFromUsername(userDetails);
+
+            // Create LoginResponse DTO
+            LoginResponse response = new LoginResponse(
+                    userDetails.getUsername(), // email
+                    userDetails.getUser().getRole(), // role
+                    jwt);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid credentials");
         }
     }
 
