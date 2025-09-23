@@ -1,6 +1,7 @@
 package com.form.creation.final_project.controller;
 
 import com.form.creation.final_project.dto.FormDTO;
+import com.form.creation.final_project.jwt.JwtUtils;
 import com.form.creation.final_project.model.*;
 import com.form.creation.final_project.repository.*;
 import com.form.creation.final_project.service.ResponseService;
@@ -36,6 +37,9 @@ public class FormController {
 
     @Autowired
     ResponseService responseService;
+
+    @Autowired
+    public JwtUtils jwtUtils;
 
     @PostMapping("/create/{userId}")
     public String createForm(@PathVariable Long userId,
@@ -78,9 +82,11 @@ public class FormController {
 
     }
 
-    @GetMapping("/all/{userId}")
-    public List<Form> getAllForms(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
+    @GetMapping("/all")
+    public List<Form> getAllForms(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtils.getUsernameFromJwtToken(token);
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return user.getAccessibleForm();
@@ -118,7 +124,7 @@ public class FormController {
         return ResponseEntity.ok(result);
     }
 
-    // ------------------------ DOWNLOAD RESPONSES AS CSV ------------------------
+    // ------------------------ DOWNLOAD RESPONSES AS CSV--------------------------
     @GetMapping("/{formId}/responses/csv")
     public void downloadResponsesCsv(@PathVariable Long formId, HttpServletResponse response) throws IOException {
         Form form = formRepository.findById(formId).orElseThrow(() -> new RuntimeException("Form Not Found"));
@@ -131,6 +137,7 @@ public class FormController {
                 allQuestions.add(entry.getQuestion().getText());
             }
         }
+
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "attachment; filename=\"form_" + formId + "_responses.csv\"");
         PrintWriter writer = response.getWriter();
@@ -140,6 +147,7 @@ public class FormController {
         for (String q : allQuestions) {
             writer.print("," + q);
         }
+
         writer.println();
         for (Response r : responses) {
             Map<String, String> answersMap = new HashMap<>();
