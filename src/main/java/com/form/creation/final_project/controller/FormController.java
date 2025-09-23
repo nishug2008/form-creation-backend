@@ -1,6 +1,7 @@
 package com.form.creation.final_project.controller;
 
 import com.form.creation.final_project.dto.FormDTO;
+import com.form.creation.final_project.jwt.JwtUtils;
 import com.form.creation.final_project.model.*;
 import com.form.creation.final_project.repository.*;
 import com.form.creation.final_project.service.ResponseService;
@@ -36,6 +37,9 @@ public class FormController {
 
     @Autowired
     ResponseService responseService;
+
+    @Autowired
+    public JwtUtils jwtUtils;
 
     @PostMapping("/create/{userId}")
     public String createForm(@PathVariable Long userId,
@@ -78,9 +82,11 @@ public class FormController {
 
     }
 
-    @GetMapping("/all/{userId}")
-    public List<Form> getAllForms(@PathVariable Long userId) {
-        User user = userRepository.findById(userId)
+    @GetMapping("/all")
+    public List<Form> getAllForms(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtils.getUsernameFromJwtToken(token);
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         return user.getAccessibleForm();

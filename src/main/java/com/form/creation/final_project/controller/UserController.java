@@ -76,13 +76,19 @@ public class UserController {
             // Get user details from CustomUserDetails
             CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
+            boolean matches = passwordEncoder.matches(password, userDetails.getPassword());
+
+            System.out.println("DEBUG: Raw password = " + password);
+            System.out.println("DEBUG: Encoded password from DB = " + userDetails.getPassword());
+            System.out.println("DEBUG: Matches? " + matches);
+
             // Generate JWT
             String jwt = jwtUtils.generateTokenFromUsername(userDetails);
 
             // Create LoginResponse DTO
             LoginResponse response = new LoginResponse(
-                    userDetails.getUsername(), // email
-                    userDetails.getUser().getRole(), // role
+                    userDetails.getUsername(),
+                    userDetails.getUser().getRole(),
                     jwt);
 
             return ResponseEntity.ok(response);
@@ -92,9 +98,10 @@ public class UserController {
         }
     }
 
-    @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id) {
-        return userRepository.findById(id).orElse(null);
+    @GetMapping("/getUser")
+    public User getUser(@RequestBody Map<String, Object> requestBody) {
+        String email = (String) requestBody.get("email");
+        return userRepository.findByEmail(email).orElse(null);
     }
 
     @GetMapping("/all")

@@ -1,5 +1,6 @@
 package com.form.creation.final_project.jwt;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 
@@ -11,7 +12,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 @Component
@@ -42,7 +42,6 @@ public class JwtUtils {
             parseClaimsJws(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
-            // Log or handle the exception as needed
             return false;
         }
     }
@@ -58,7 +57,9 @@ public class JwtUtils {
 
     // Helper method to get the signing key
     private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        // return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+
     }
 
 }
