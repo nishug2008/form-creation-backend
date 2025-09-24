@@ -41,11 +41,11 @@ public class FormController {
     @Autowired
     public JwtUtils jwtUtils;
 
-    @PostMapping("/create/{userId}")
-    public String createForm(@PathVariable Long userId,
+    @PostMapping("/create/{email}")
+    public String createForm(@PathVariable String email,
             @RequestBody FormDTO formDTO) {
 
-        User creator = userRepository.findById(userId).orElse(null);
+        User creator = userRepository.findByEmail(email).orElse(null);
 
         if (creator == null)
             return "User not found!";
@@ -92,9 +92,11 @@ public class FormController {
         return user.getAccessibleForm();
     }
 
-    @GetMapping("/user/{userId}")
-    public List<Form> getFormsByUser(@PathVariable Long userId) {
-        User user = userRepository.findById(userId).orElse(null);
+    @GetMapping("/user")
+    public List<Form> getFormsByUser(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtUtils.getUsernameFromJwtToken(token);
+        User user = userRepository.findByEmail(email).orElse(null);
         return (user == null) ? null : formRepository.findByCreatedBy(user);
     }
 

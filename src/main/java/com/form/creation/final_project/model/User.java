@@ -22,6 +22,7 @@ public class User {
 
     private String firstName;
     private String lastName;
+
     @ManyToMany(mappedBy = "permittedUsers")
     @JsonIgnore
     private List<Form> accessibleForm;
@@ -32,6 +33,7 @@ public class User {
     @OneToMany(fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Response> response;
+
     @Column(unique = true, nullable = false)
     private String email;
 

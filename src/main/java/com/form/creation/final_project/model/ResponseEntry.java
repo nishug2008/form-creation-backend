@@ -11,10 +11,13 @@ import jakarta.persistence.ManyToOne;
 
 @Entity
 public class ResponseEntry {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String answertext;
+
     @ManyToOne
     @JoinColumn(name = "question_id")
     private Question question;
