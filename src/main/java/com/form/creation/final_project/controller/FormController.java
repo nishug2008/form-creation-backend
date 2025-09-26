@@ -21,6 +21,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/forms")
@@ -145,11 +146,12 @@ public class FormController {
         PrintWriter writer = response.getWriter();
 
         // CSV header
-        writer.print("UserId");
+        writer.print("Count");
+        writer.print("," + "UserId");
         for (String q : allQuestions) {
             writer.print("," + q);
         }
-
+        int i = 1;
         writer.println();
         for (Response r : responses) {
             Map<String, String> answersMap = new HashMap<>();
@@ -157,16 +159,27 @@ public class FormController {
             for (ResponseEntry entry : r.getResponseEntries()) {
                 answersMap.put(entry.getQuestion().getText(), entry.getAnswertext());
             }
-
-            writer.print(r.getUser().getId());
+            // writer.print(i);
+            writer.print(i + "," + r.getUser().getId());
             for (String q : allQuestions) {
                 writer.print("," + answersMap.getOrDefault(q, ""));
             }
             writer.println();
-
+            i++;
         }
         writer.flush();
         writer.close();
+    }
+
+    @GetMapping("{formId}/response/count")
+    public int getMethodName(@PathVariable Long formId) {
+        Form form = formRepository.findById(formId).orElseThrow(() -> new RuntimeException("Form Not found"));
+        List<Response> responses = responseService.getResponsesByForm(form);
+        int i = 0;
+        for (Response r : responses) {
+            i++;
+        }
+        return i;
     }
 
     @DeleteMapping("/delete/{formId}")

@@ -101,9 +101,25 @@ public class ResponseController {
         return responseRepository.findByUser(user);
     }
 
-    // @PutMapping("edit")
-    // public String editResponses(@RequestBody Map<Object, String> entity) {
+    @PutMapping("/update/{responseId}")
+    public ResponseEntity<String> editResponses(@PathVariable Long responseId,
+                                                @RequestBody Map<Long, String> newAnswers) {
+        Response response = responseRepository.findById(responseId).orElse(null);
 
-    // return entity;
-    // }
+        List<ResponseEntry> responseEntry = response.getResponseEntries();
+
+        if(responseEntry == null){
+            return ResponseEntity.badRequest().body("Data not found");
+        }
+
+        for(ResponseEntry entry : responseEntry){
+            Long questionId = entry.getQuestion().getQuestionId();
+            if(newAnswers.containsKey(questionId)){
+                entry.setAnswertext(newAnswers.get(questionId));
+            }
+        }
+
+        responseRepository.save(response);
+        return ResponseEntity.ok("Updated Successfully");
+    }
 }
