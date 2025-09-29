@@ -1,6 +1,7 @@
 package com.form.creation.final_project.controller;
 
 import com.form.creation.final_project.dto.FormDTO;
+import com.form.creation.final_project.exception.MyException;
 import com.form.creation.final_project.jwt.JwtUtils;
 import com.form.creation.final_project.model.*;
 import com.form.creation.final_project.repository.*;
@@ -9,6 +10,7 @@ import com.form.creation.final_project.service.ResponseService;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +23,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/forms")
@@ -108,23 +109,32 @@ public class FormController {
 
     // ------------------------ GET RESPONSES AS JSON ------------------------
     @GetMapping("/{formId}/responses")
-    public ResponseEntity<List<Map<String, Object>>> getResponseAsJson(@PathVariable Long formId) {
-        Form form = formRepository.findById(formId)
-                .orElseThrow(() -> new RuntimeException("Form Not Found"));
+    public ResponseEntity<?> getResponseAsJson(@PathVariable Long formId) {
+        try {
+            Form form = formRepository.findById(formId)
+                    .orElseThrow(() -> new RuntimeException("Form Not Found"));
 
-        List<Response> responses = responseService.getResponsesByForm(form);
+            List<Response> responses = responseService.getResponsesByForm(form);
 
-        List<Map<String, Object>> result = new ArrayList<>();
+            List<Map<String, Object>> result = new ArrayList<>();
 
-        for (Response r : responses) {
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("userId", r.getUser().getId());
-            for (ResponseEntry entry : r.getResponseEntries()) {
-                row.put(entry.getQuestion().getText(), entry.getAnswertext());
+            for (Response r : responses) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("userId", r.getUser().getId());
+                for (ResponseEntry entry : r.getResponseEntries()) {
+                    row.put(entry.getQuestion().getText(), entry.getAnswertext());
+                }
+                result.add(row);
             }
-            result.add(row);
+            return ResponseEntity.ok(result);
+
+        } catch (MyException e) {
+            // return proper JSON error response
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
-        return ResponseEntity.ok(result);
+
     }
 
     // ------------------------ DOWNLOAD RESPONSES AS CSV--------------------------
@@ -173,6 +183,7 @@ public class FormController {
 
     @GetMapping("{formId}/response/count")
     public int getMethodName(@PathVariable Long formId) {
+
         Form form = formRepository.findById(formId).orElseThrow(() -> new RuntimeException("Form Not found"));
         List<Response> responses = responseService.getResponsesByForm(form);
         int i = 0;

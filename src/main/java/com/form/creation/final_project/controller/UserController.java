@@ -3,6 +3,7 @@ package com.form.creation.final_project.controller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.form.creation.final_project.dto.LoginResponse;
+import com.form.creation.final_project.exception.MyException;
 import com.form.creation.final_project.jwt.JwtUtils;
 import com.form.creation.final_project.model.User;
 import com.form.creation.final_project.repository.UserRepository;
@@ -95,6 +96,7 @@ public class UserController {
 
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid credentials");
+
         }
     }
 
