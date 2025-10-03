@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @RequestMapping("/users")
@@ -111,4 +112,22 @@ public class UserController {
         return userRepository.findAll();
     }
 
+    @PutMapping("/forgot/password")
+    public ResponseEntity<?> putMethodName(@RequestBody Map<String, Object> userDetails) {
+        // TODO: process PUT request
+        String email = (String) userDetails.get("email");
+        String newPassword = (String) userDetails.get("newPassword");
+        if (email == null || newPassword == null) {
+            return ResponseEntity.badRequest().body("Email and new password are required");
+        }
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+
+            return ResponseEntity.status(404).body("User with the given email not found");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return ResponseEntity.ok("Password updated successfully. Please login with new password");
+    }
 }

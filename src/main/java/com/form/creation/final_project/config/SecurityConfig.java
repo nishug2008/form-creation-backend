@@ -49,8 +49,10 @@ public class SecurityConfig {
                 }).csrf(csrf -> csrf.disable()) // Disable CSRF
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/users/login", "/users/register").permitAll()
-                        .anyRequest().authenticated());
+                .authorizeHttpRequests(
+                        auth -> auth.requestMatchers("/users/login", "/users/register", "/users/forgot/password")
+                                .permitAll()
+                                .anyRequest().authenticated());
 
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
