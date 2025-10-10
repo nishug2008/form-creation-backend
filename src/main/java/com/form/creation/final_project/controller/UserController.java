@@ -143,7 +143,7 @@ public class UserController {
         if (updates.containsKey("firstName")) {
             user.setFirstName((String) updates.get("firstName"));
         }
-        User updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(updatedUser);
+        userRepository.save(user);
+        return ResponseEntity.ok("User Name has been succesfully updated");
     }
 }
