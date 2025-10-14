@@ -1,5 +1,7 @@
 package com.form.creation.final_project.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -12,6 +14,7 @@ import com.form.creation.final_project.security.CustomUserDetails;
 
 @Service
 public class UserServices implements UserDetailsService {
+
     @Autowired
     private UserRepository userRepository;
 
@@ -22,4 +25,14 @@ public class UserServices implements UserDetailsService {
 
         return new CustomUserDetails(user);
     }
+
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public User getUserByEmail(String email) {
+
+        return userRepository.findByEmail(email).orElse(null);
+    }
+
 }

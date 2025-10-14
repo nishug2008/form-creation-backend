@@ -8,6 +8,7 @@ import com.form.creation.final_project.jwt.JwtUtils;
 import com.form.creation.final_project.model.User;
 import com.form.creation.final_project.repository.UserRepository;
 import com.form.creation.final_project.security.CustomUserDetails;
+import com.form.creation.final_project.service.UserServices;
 
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,9 @@ public class UserController {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    @Autowired
+    private UserServices userServices;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, Object> userDetails) {
@@ -107,12 +111,12 @@ public class UserController {
     @GetMapping("/getUser")
     public User getUser(@RequestBody Map<String, Object> requestBody) {
         String email = (String) requestBody.get("email");
-        return userRepository.findByEmail(email).orElse(null);
+        return userServices.getUserByEmail(email);
     }
 
     @GetMapping("/all")
     public List<User> getAllUser() {
-        return userRepository.findAll();
+        return userServices.findAllUsers();
     }
 
     @PutMapping("/forgot/password")
@@ -123,7 +127,7 @@ public class UserController {
         if (email == null || newPassword == null) {
             return ResponseEntity.badRequest().body("Email and new password are required");
         }
-        User user = userRepository.findByEmail(email).orElse(null);
+        User user = userServices.getUserByEmail(email);
         if (user == null) {
 
             return ResponseEntity.status(404).body("User with the given email not found");
@@ -139,7 +143,7 @@ public class UserController {
             @RequestBody Map<String, Object> updates) {
         String token = authHeader.replace("Bearer ", "");
         String email = jwtUtils.getUsernameFromJwtToken(token);
-        User user = userRepository.findByEmail(email).orElse(null);
+        User user = userServices.getUserByEmail(email);
         if (updates.containsKey("firstName")) {
             user.setFirstName((String) updates.get("firstName"));
         }
