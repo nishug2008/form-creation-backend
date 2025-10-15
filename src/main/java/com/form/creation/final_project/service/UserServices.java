@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.form.creation.final_project.exception.MyException;
 import com.form.creation.final_project.model.User;
 import com.form.creation.final_project.repository.UserRepository;
 import com.form.creation.final_project.security.CustomUserDetails;
@@ -26,12 +27,15 @@ public class UserServices implements UserDetailsService {
         return new CustomUserDetails(user);
     }
 
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
+    public List<User> findAllUsers() throws MyException {
+        try {
+            return userRepository.findAll();
+        } catch (Exception e) {
+            throw new MyException("Empty user");
+        }
     }
 
-    public User getUserByEmail(String email) {
-
+    public User getUserByEmail(String email) throws MyException {
         return userRepository.findByEmail(email).orElse(null);
     }
 
