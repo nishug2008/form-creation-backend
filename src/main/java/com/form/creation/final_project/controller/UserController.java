@@ -129,7 +129,6 @@ public class UserController {
         }
         User user = userServices.getUserByEmail(email);
         if (user == null) {
-
             return ResponseEntity.status(404).body("User with the given email not found");
         }
 
